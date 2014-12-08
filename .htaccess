@@ -1,0 +1,8 @@
+# .html as .php
+AddType application/x-httpd-php .html .php
+
+# urls 
+# use [R] flag to force url in location bar
+# RewriteEngine on
+# RewriteBase /
+# RewriteRule ^about$			words.html?id=96
