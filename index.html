@@ -1,0 +1,298 @@
+<?php 
+
+
+
+
+  ////////////////////
+ //  Forum Mapper  //
+////////////////////
+
+function systemForumMapper($objects = "0", $limit = null) {
+
+
+	//  Handle recursion 
+
+	$limitNext = ($limit === null) ? null : $limit - 1;
+	$obj   = explode(",", $objects);
+	$depth = count($obj) - 1;
+	$first = $obj[1];
+	$final = $obj[$depth];
+
+
+	$id = null;	
+	for ($i = 1; $i < count($obj); $i++) {
+
+		if ($i > 1) $id .= ",";
+		$id .= $obj[$i];
+	}
+
+
+	//  Pull from current node
+
+	$sql = "
+		SELECT * FROM objects 
+		WHERE id = '$final' 
+		AND active = 1 
+		LIMIT 1
+		";
+	$res = MYSQL_QUERY($sql);
+	$row = MYSQL_FETCH_ARRAY($res);
+
+	$name  = strip_tags($row["name1"]);
+	if (!$name) $name = "Untitled";
+	if (substr($name, 0, 1) != "." && substr($name, 0, 1) != "_") {
+
+
+		//  Display current node
+
+		if (count($obj) > 1) {	
+
+			$html  = "\n<div style='padding-left: ". (($depth - 1) * 20) ."px;'>";
+			$html .= "<a href='index.html?id=$id'>";
+			$html .=  date("j F Y H:i:s", strtotime($row["modified"])) ." / ";
+			$html .= strip_tags($name);
+			$html .= "</a></div>";
+			echo $html;
+		}
+		
+	
+		//  Find children of current node
+	
+		if ($limit > 0 || $limit === null) {
+	
+			$sql = "
+				SELECT objects.id AS objectsId FROM wires, objects 
+				WHERE wires.fromid = '$final' AND wires.toid = objects.id 
+				AND wires.active = 1 AND objects.active = 1 
+				ORDER BY objects.rank ASC
+				";
+			$res = MYSQL_QUERY($sql);
+			while ($row = MYSQL_FETCH_ARRAY($res)) {
+	
+				$tmp = $objects .",". $row["objectsId"];
+				systemForumMapper($tmp, $limitNext);
+			}
+		}
+	}
+}
+
+
+
+
+
+
+
+
+//  Begin
+
+$ids = explode(",", $id);
+$id  = $ids[count($ids) - 1];
+require_once("GLOBAL/head.php");
+echo "\n--<br /><br />";
+
+
+//  Text Filter
+
+function textFilter($text = null) {
+
+	$filter = array ( 
+		array("fuck", "---"), 
+		// add others here.
+		// all the best greatest amazing words you can think of
+	); 
+
+	for ($i = 0; $i < sizeof($filter); $i++) {
+
+		$text = eregi_replace($filter[$i][0], $filter[$i][1], $text);
+	}
+	return $text;
+}
+
+
+//  Find "Forum" object
+
+$sql  = "SELECT objects.id AS objectsId FROM wires, objects ";
+$sql .= "WHERE wires.fromid = '0' AND wires.toid = objects.id AND objects.name1 LIKE 'Class' ";
+$sql .= "AND wires.active = 1 AND objects.active = 1 ";
+$sql .= "ORDER BY objects.rank DESC LIMIT 1";
+$res  =  MYSQL_QUERY($sql);
+$row  =  MYSQL_FETCH_ARRAY($res);
+$obj  = $row["objectsId"];
+
+
+
+
+
+
+
+
+//  Post a message
+
+// TURN OFF POSTING FOR NOW
+// if ($action == "post") {
+if ($action == "disabled") {
+
+
+	//  Clean up input
+
+	if (!get_magic_quotes_gpc()) {
+
+		$name1 = addslashes($name1);
+		$deck  = addslashes($deck );
+		$body  = addslashes($body );
+	}
+
+
+	//  Process variables
+
+	if (!$name1) $name1 = "[No Subject]";
+	$name1 = textFilter($name1);
+	$deck  = textFilter($deck );
+	$body  = textFilter($body );
+
+
+	//  Add object to database
+
+	$sql  = "INSERT INTO objects (created, modified, name1, deck, body) ";
+	$sql .= "VALUES('". date("Y-m-d") ."', '". date("Y-m-d") ."', '$name1', '$deck', '$body')";
+	$res  =  MYSQL_QUERY($sql);
+	$insertId = MYSQL_INSERT_ID();
+
+
+	//  Add wire to database
+
+	$sql  = "INSERT INTO wires (created, modified, fromid, toid) ";
+	$sql .= "VALUES('". date("Y-m-d") ."', '". date("Y-m-d") ."', '$id', '$insertId')";
+	$res  =  MYSQL_QUERY($sql);
+	
+	$id = null;
+}
+
+
+
+
+//  Form for posting
+
+// TURN OFF POSTING FOR NOW
+// if ($action == "write") {
+if ($action == "disabled") {
+	?>
+	You are posting a message to the Open Forum.<br />
+	<a href='index.html'>View All Messages</a><br /><br />
+	<br />
+	<table cellpadding="0" cellspacing="0" border="0">
+	<form enctype="multipart/form-data" action="index.html" method="post" style="margin: 0; padding: 0;">
+	<tr><td width="90">Subject&nbsp; </td>
+	<td><textarea name='name1' cols='80' rows='1'></textarea></td></tr>
+	<tr><td>From&nbsp; </td>
+	<td><textarea name='deck' cols='80' rows='1'></textarea></td></tr>
+	<tr><td style="vertical-align: top;">Message&nbsp; </td>
+	<td><textarea name='body' cols='80' rows='40'></textarea></td></tr>
+	<tr><td><!--  --></td>
+	<td><br />
+	<input name='id'     type='hidden' value='<?php echo $id; ?>' />
+	<input name='action' type='hidden' value='post' />
+	<input name='submit' type='submit' value='Post Message' />
+	</form></td></tr>
+	</table>
+	<?php
+}
+
+
+
+
+//  Display selected object
+
+if ($id != 1) {
+
+
+	//  Get list of all "Forum" objects
+
+	$sql  = "SELECT objects.id AS objectsId, objects.created AS objectsCreated FROM wires, objects ";
+	$sql .= "WHERE wires.fromid = '$obj' AND wires.toid = objects.id ";
+	$sql .= "AND wires.active = 1 AND objects.active = 1 ";
+	$sql .= "ORDER BY objects.rank DESC";
+	$res  =  MYSQL_QUERY($sql);
+
+	$posts = array();
+	$i = 0;
+	while ($row = MYSQL_FETCH_ARRAY($res)) {
+
+		$posts[$i] = $row["objectsId"];
+		if ($row["objectsId"] == $id) $postCurrent = $i;
+		$i++;
+	}
+	$postNewerIndex = ($postCurrent < 1) ? 0 : $postCurrent - 1;
+	$postOlderIndex = ($postCurrent > count($posts) - 2) ? count($posts) - 1 : $postCurrent + 1;
+
+	$postNewer = $posts[$postNewerIndex];
+	$postOlder = $posts[$postOlderIndex];
+	if (!$postOlderIndex) $postOlder = $id;
+
+
+	//  Get selected "Forum" object
+
+	$sql = "SELECT * FROM objects WHERE id = '$id' LIMIT 1";
+	$res =  MYSQL_QUERY($sql);
+	$row =  MYSQL_FETCH_ARRAY($res);
+
+	if (!$action) {
+
+		$html .= "\n\n\n<div>";
+		//$html .= "<a href='index.html?id=$postOlder'>Previous / </a>";
+		$html .= "\n<a href='index.html'>View All Messages / </a>";
+		//$html .= "<a href='index.html?id=$postNewer'>Next</a>";
+		$html .= "</div>";
+		
+		// TEMPORARILY DISABLE POSTING
+		// $html .= "\n<a href='index.html?action=write'>Post a new message</a>";
+		// if (count($ids) < 2) $html .= " / \n<a href='index.html?action=write&id=$id'>Reply to this message</a>";
+		//$html .= "<br /><br />";
+	
+		//$html .= "<a href='index.html?action=write'>Post a new message</a><br /><br />";
+
+	} else {
+
+		$html .= "<br /><br /><br />You are replying to the following message:<br /><br />";	
+	}
+
+
+
+
+	$html .= "<div class='monospace'>";	
+	// $html .= "\n<center><img src='MEDIA/jit.gif' style='width:40px;'></center>";
+	$html .= "<table cellspacing='0' cellpadding='0'>";	
+	$html .= "\n<tr><td style='padding-right: 12px;'>{$row["name1"]}</td></tr>";
+	$html .= "\n<tr><td style='padding-right: 12px;'>" .date("j F Y", strtotime($row["modified"])) ."</td></tr>";
+	$html .= "\n<tr><td style='padding-right: 12px;'><br/>--<br/></td><td></td></tr></table><br />";
+
+	$html .= "\n". nl2br($row["body"]) ."</div><br /><br />";
+
+	if (!$action) {
+
+		// $html .= "\n<a href='index.html?action=write'>Post a new message</a>";
+		// if (count($ids) < 2) $html .= " / \n<a href='index.html?action=write&id=$id'>Reply to this message</a>";
+	}
+	echo $html;
+}
+
+
+
+
+//  List objects attached to "Forum"
+
+if ($id == 1 && !$action) {
+	
+	echo "You are viewing all posts.<br /><br />";
+	// echo "<a href='index.html?action=write'>Post a new message</a><br /><br />";
+
+	systemForumMapper("1", 2);
+}
+
+
+
+
+echo "\n<br /><br />--<br /><br />";
+require_once("GLOBAL/foot.php"); 
+
+?>

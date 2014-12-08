@@ -1,0 +1,175 @@
+<?php 
+require_once("_Library/systemMedia.php"); 
+require_once("GLOBAL/head.php"); 
+?>
+
+
+
+
+<!--  LIBRARY DISPLAY  -->
+
+<?php
+if (!$id) {
+
+
+/*
+	// TOTALLY HACKED UP!
+
+	$sql  = "SELECT objects.id AS objectsId, objects.created AS objectsCreated FROM wires, objects ";
+	$sql .= "WHERE wires.fromid = '2' AND wires.toid = objects.id ";
+	$sql .= "AND wires.active = 1 AND objects.active = 1 ";
+	$sql .= "ORDER BY rank, objects.created DESC";
+	$res  =  MYSQL_QUERY($sql);
+	$objectCreated = $myrow["created"];
+
+	$sql    = "SELECT media.caption AS mediaCaption, media.type, media.object AS mediaObject, media.id AS mediaID, wires.active FROM wires, media ";
+	//$sql   .= "WHERE media.object > 2 AND media.object < 56 AND media.active = 1 ";
+	$sql   .= "WHERE wires.fromid = '2' AND wires.active = 1 AND wires.toid = media.object AND media.active = 1 ";
+	$sql   .= "ORDER BY media.rank, media.caption, media.modified DESC";
+	$result =  MYSQL_QUERY($sql);
+*/
+	
+	
+	// A BIT BETTER (!)
+	
+/*	$sql    = "SELECT *, media.caption AS mediaCaption, media.type, media.object AS mediaObject, media.id AS mediaID FROM objects, wires, media ";
+	$sql   .= "WHERE media.object = objects.id AND media.active = 1 AND objects.active = 1 ";
+	$sql   .= "ORDER BY objects.rank, objects.created DESC";
+	*/
+		$baseRecord = "Library";
+			
+		$sql    = "SELECT *, media.caption AS mediaCaption, media.type, media.object AS mediaObject, media.id AS mediaID FROM objects, wires, media WHERE wires.fromid = ( SELECT objects.id FROM objects WHERE objects.name1 LIKE '$baseRecord' AND objects.active='1' LIMIT 1 ) AND wires.toid = objects.id AND media.object = objects.id AND wires.active = 1 AND media.active = 1 AND objects.active = 1 ORDER BY objects.rank, objects.created DESC";
+	
+	$result =  MYSQL_QUERY($sql);
+			
+	while ($myrow = MYSQL_FETCH_ARRAY($result)) {
+
+		$mediaFile = "MEDIA/". STR_PAD($myrow["mediaID"], 5, "0", STR_PAD_LEFT) .".". $myrow["type"];
+		$mediaCaption = $myrow["mediaCaption"];
+
+		echo "<div class='box' style='width: 150px;'>";
+		echo "<a href = 'library.html?id=".$myrow['mediaObject']."'/>";
+		echo "<img src='".$mediaFile."' width='150' border='0' style='padding: 0px 0px 4px 0px;' />";
+		echo "</a>";
+		echo "<div class='helvetica' style='width: 150px;'>".$mediaCaption."</div>";
+		echo "</div>";
+	}
+	if ($mediaFile) {
+			echo "\n<br/><br/>";
+
+	}
+	
+	echo "\n</div>";
+
+}
+
+
+
+if ($id) {
+
+
+
+	// IF $ID, FIRST DO CHECKOUT THEN SHOW (THIS IS A  TEMP HACK)
+
+	// LIBRARY CHECK-OUT
+
+	// GET THE VARIABLES NOT INCUDING TIME
+
+	$ip = $REMOTE_ADDR; //$remote_addr is PHP variable to get ip address
+	$referer = $HTTP_REFERER; //$http_referer is PHP variable to get referer
+	$browser = $HTTP_USER_AGENT; //$http_user_agent is PHP variable for browser
+
+
+	// WRITE TO DATABASE
+
+	//  Process variables
+
+	$begin = ($begin) ? date("Y-m-d H:i:s", strToTime($begin)) : NULL;
+
+	// TEMP STUBS
+	//$ip = 200;
+	$filename = $referer;
+
+
+	//  Add object to database
+
+	$sql = "INSERT INTO downloads (created, modified, ip, filename) VALUES('". date("Y-m-d H:i:s") ."', '". date("Y-m-d H:i:s") ."', '$ip', '$filename')";
+	$result = MYSQL_QUERY($sql);
+	$insertId = MYSQL_INSERT_ID();
+
+
+
+
+
+
+	// NOW DISPLAY
+
+
+
+	$sql    = "SELECT * FROM objects ";
+	$sql   .= "WHERE objects.id = '$id' AND objects.active = 1 ";
+	$sql   .= "LIMIT 1";
+	$result =  MYSQL_QUERY($sql);
+	$myrow  =  MYSQL_FETCH_ARRAY($result);
+
+	//echo "\n<div class='boxSinister'>";
+	
+	echo "--<br/><br/>";
+		
+			if ($myrow["name1"]) echo "\n". nl2br($myrow["name1"]) ."<br /><br />";
+
+	if ($myrow["deck"]) echo "\n". nl2br($myrow["deck"]) ."<br /><br />";
+
+	$objectCreated = $myrow["created"];
+
+	$sql    = "SELECT * FROM media ";
+	$sql   .= "WHERE object = '". $myrow["id"] ."' AND active = 1 ";
+	$sql   .= "ORDER BY rank, caption, modified ASC";
+	$result =  MYSQL_QUERY($sql);
+	while ($myrow = MYSQL_FETCH_ARRAY($result)) {
+
+		$mediaFile = "MEDIA/". STR_PAD($myrow["id"], 5, "0", STR_PAD_LEFT) .".". $myrow["type"];
+		$mediaCaption = strip_tags($myrow["caption"]);
+		echo "\n\n". systemMedia($mediaFile, $mediaCaption);
+		echo systemMedia($file, $caption, $style, $link);
+		//echo "".$myrow["caption"]."";
+	}
+	if ($mediaFile) {
+			echo "\n<br/><br/>";
+
+	}
+	
+	$sql    = "SELECT * FROM objects ";
+	$sql   .= "WHERE objects.id = '$id' AND objects.active = 1 ";
+	$sql   .= "LIMIT 1";
+	$result =  MYSQL_QUERY($sql);
+	$myrow  =  MYSQL_FETCH_ARRAY($result);
+	
+	if ($myrow["body"]) echo "\n". nl2br($myrow["body"]) ."<br /><br />";
+	
+	echo "\n</div>";
+	
+	// TIME DATE STAMP
+	echo "\n\n<div class='helvetica'>Posted ". date("j F Y H:i:s", strtotime($objectCreated)) ."</div>";
+	
+	// GO BACK
+	echo "\n<br/>";
+	echo "\n--<br/><br/>";
+	echo "\n<a href='main.html'>Go back</a><br/><br/>";
+	echo "\n--<br/>";
+
+
+}
+
+
+
+
+
+
+
+	echo "\n</div>";
+
+
+
+
+require_once("GLOBAL/foot.php"); ?>
