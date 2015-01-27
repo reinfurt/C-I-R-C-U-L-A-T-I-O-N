@@ -36,7 +36,7 @@ require_once("_Library/systemDatabase.php");
 		<script type="text/javascript" src="GLOBAL/global.js"></script>
 	</head>
 	<body<?php 
-	if ($pageName == "library") { 
+	if ($pageName == "library.html") { 
 		echo " style='background-color:#999;' "; 
 	} else { 
 		echo " style='background-color:#FFF;' "; 
@@ -74,8 +74,8 @@ if ($pageName && !$stripped) {
 
 	<div>
 	<ul>
-	<li><a href="index.html" title="Show">Put That There</a></li>
-	<li>VIS 214, Circulation</li>
+	<li><a href="index.html" title="Show">The Information</a></li>
+	<li>VIS 217, Circulation</li>
 	<li>Princeton University</li>
 	<li>185 Nassau Room 303</li>
 	<li>Tue 1:30-4:20, 7:20-9:20 pm</li>

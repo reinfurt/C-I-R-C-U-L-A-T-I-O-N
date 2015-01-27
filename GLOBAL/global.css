@@ -112,19 +112,19 @@ ul, ol, li {
 // green
 
 .green {
-	color: #0C0; }
+	color: #F00; }
 
 .green a:link {
-	color: #0C0; 
+	color: #F00; 
 	text-decoration: none; }
 
 .green a:visited {
-	color: #0C0; 
+	color: #F00; 
 	text-decoration: none; }
 
 .green a:hover {
 	color: #FFF; 
-	background-color: #0C0;
+	background-color: #F00;
 	text-decoration: none; }
 
 .green a:active { 
@@ -254,16 +254,16 @@ ul, ol, li {
 	color: #000; }
 
 .monospace a:link {
-	color: #00F; 
+	color: #F00; 
 	text-decoration: none; }
 
 .monospace a:visited {
-	color: #00F; 
+	color: #F00; 
 	text-decoration: none; }
 
 .monospace a:hover {
 	color: #FFF; 
-	background-color: #00F;
+	background-color: #F00;
 	text-decoration: none; }
 
 .monospace a:active { 
