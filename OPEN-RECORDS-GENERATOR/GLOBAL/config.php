@@ -36,7 +36,7 @@
 	// (hour, minute, second, month, day, year)
 
 	// Client URL
-	$dbHost = "http://localhost/C-I-R-C-U-L-A-T-I-O-N/";
+	$dbHost = "http://www.c-i-r-c-u-l-a-t-i-o-n.org/";
 
 	// DB Admin
 	$dbAdmin = $dbHost ."OPEN-RECORDS-GENERATOR/";
@@ -57,12 +57,15 @@
 
 function dbConnectMain($dbUser) {
 
-	$dbMainHost = "localhost";
-	$dbMainDbse = "circulation_local";
+	$dbMainHost = "db152d.pair.com";
+	$dbMainDbse = "reinfurt_circulation";
 
-	if 		($dbUser == 1) {		$dbMainUser = "root"; 	$dbMainPass = ""; }
-	else if ($dbUser == 2) {		$dbMainUser = "root"; 	$dbMainPass = ""; }
-	else if ($dbUser == 3) {		$dbMainUser = "root";   	$dbMainPass = ""; }
+	if 		($dbUser == 1) {		$dbMainUser = "reinfurt_39"; 	$dbMainPass = 
+"Q4UZtkW7"; }
+	else if ($dbUser == 2) {		$dbMainUser = "reinfurt_39"; 	$dbMainPass = 
+"Q4UZtkW7"; }
+	else if ($dbUser == 3) {		$dbMainUser = "reinfurt_39";   	$dbMainPass = 
+"Q4UZtkW7"; }
 
 	$dbConnect = MYSQL_CONNECT($dbMainHost, $dbMainUser, $dbMainPass);
 	MYSQL_SELECT_DB($dbMainDbse, $dbConnect);

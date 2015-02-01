@@ -74,7 +74,7 @@ if ($pageName && !$stripped) {
 
 	<div>
 	<ul>
-	<li><a href="index.html" title="Show">The Information</a></li>
+	<li><a href="index.html" title="Show">C-i-r-c-u-l-a-t-i-o-n</a></li>
 	<li>VIS 217, Circulation</li>
 	<li>Princeton University</li>
 	<li>185 Nassau Room 303</li>
